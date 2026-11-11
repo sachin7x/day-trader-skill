@@ -100,7 +100,7 @@ This example uses public market data only. A successful API response is not proo
 
 ## India operator checklist and regulatory data model
 
-The system treats India as a reporting and venue-review profile, not as a blanket approval to trade on any foreign venue.
+The system treats India as a reporting and venue-review profile, not as a blanket approval to trade on any foreign venue. The dated exchange/API review is in [INDIA_VENUE_RESEARCH.md](INDIA_VENUE_RESEARCH.md).
 
 ### Tax-period versioning
 
