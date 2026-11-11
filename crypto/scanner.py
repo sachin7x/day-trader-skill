@@ -3,6 +3,7 @@ from .indicators import atr, ema, rsi
 
 
 def rank_market(candles_by_symbol, min_quote_volume=0, min_candles=60):
+    min_quote_volume = float(min_quote_volume)
     ranked = []
     for symbol, candles in candles_by_symbol.items():
         if len(candles) < min_candles:
