@@ -8,7 +8,7 @@ from crypto.research import monte_carlo, walk_forward
 
 class OneShot:
     def evaluate(self, candles):
-        if len(candles) != 1:
+        if len(candles) not in (11, 16):
             return None
         bar = candles[-1]
         return Signal("one", bar.symbol, "buy", bar.timestamp, bar.close,
@@ -33,7 +33,9 @@ class ResearchTests(unittest.TestCase):
         self.assertEqual(result["fold_count"], 2)
         self.assertEqual(result["folds"][0]["warmup_bars"], 10)
         self.assertEqual(result["folds"][0]["test_bars"], 5)
-        self.assertEqual(result["folds"][0]["trades"], [])
+        self.assertEqual(len(result["folds"][0]["trades"]), 1)
+        self.assertEqual(result["folds"][0]["trades"][0]["entry_time"],
+                         self.candles[11].timestamp.isoformat())
 
     def test_monte_carlo_is_reproducible(self):
         trades = [{"net_pnl": "10"}, {"net_pnl": "-5"}, {"net_pnl": "2"}]
