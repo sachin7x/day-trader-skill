@@ -54,3 +54,11 @@ class VenueGateTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+    def test_venue_requires_verified_api_scopes_and_withdrawals_disabled(self):
+        assessment = VenueAssessment("x", "IN", True, True, checked_on=date(2026, 11, 1),
+                                     api_permissions_verified=True,
+                                     withdrawal_permission_enabled=True)
+        ok, reasons = assessment.eligibility("crypto_spot", today=date(2026, 11, 11))
+        self.assertFalse(ok)
+        self.assertIn("withdrawal permission is enabled; disable it before trading integration", reasons)
