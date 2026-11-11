@@ -30,6 +30,8 @@ def evaluate(signal, instrument, equity, limits=None, now=None, current_daily_pn
     """
     limits = limits or RiskLimits()
     now = now or datetime.now(timezone.utc)
+    if now.tzinfo is None:
+        raise ValueError("now must be timezone-aware")
     equity = D(equity)
     daily_pnl = D(current_daily_pnl)
     balance = equity if available_balance is None else D(available_balance)
