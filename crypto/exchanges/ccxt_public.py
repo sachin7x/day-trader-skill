@@ -78,8 +78,6 @@ class CCXTPublicAdapter(MarketDataAdapter):
             if next_cursor <= cursor:
                 raise RuntimeError("exchange OHLCV pagination did not advance")
             cursor = next_cursor
-            if len(batch) < limit:
-                break
         else:
             raise RuntimeError("OHLCV pagination exceeded max_pages")
         candles = []
