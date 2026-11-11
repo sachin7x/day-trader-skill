@@ -214,3 +214,19 @@ tests/              unittest suite + offline fixtures
 ```
 
 MIT. Made by [Jake Schincariol](https://opusjake.ai).
+
+
+## Crypto research engine (new, research-first)
+
+The `crypto/` package adds an isolated crypto research and paper-trading foundation without changing the eleven existing US-equity skills.
+
+Current capabilities:
+- Decimal-backed instrument, candle, signal and risk-limit models.
+- EMA, RSI, ATR, MACD, VWAP and Bollinger Band indicators.
+- Deterministic EMA-cross, RSI-recovery, UTC-day VWAP-breakout and Bollinger-breakout strategies.
+- Transparent scanner ranking with trend, momentum, liquidity and volatility fields.
+- Fee- and slippage-aware position sizing.
+- Event-driven OHLCV backtesting with next-candle entries, conservative stop-first handling, stop-gap slippage, participation caps and optional perpetual funding inputs.
+- Idempotent paper order ledger and a public-only optional CCXT market-data adapter.
+
+Start with `docs/CRYPTO_ENGINE_DESIGN.md`. This increment does not submit live orders, read exchange balances, or enable leverage. CCXT connectivity is public market data only. Exchange access and Indian regulatory status must be independently verified before selecting a venue.
