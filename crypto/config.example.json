@@ -1,0 +1,18 @@
+{
+  "mode": "research",
+  "quote_currency": "USDT",
+  "reporting_currency": "INR",
+  "timezone": "Asia/Kolkata",
+  "leverage_enabled": false,
+  "risk_fraction": 0.0025,
+  "max_notional_fraction": 0.10,
+  "max_daily_loss_fraction": 0.01,
+  "slippage_bps": 5,
+  "participation_rate": 0.02,
+  "market_data": {
+    "exchange": "binance",
+    "timeframe": "5m",
+    "symbols": ["BTC/USDT", "ETH/USDT", "SOL/USDT"]
+  },
+  "note": "Example only. Exchange availability and legality are not inferred from API connectivity. No credentials belong in this file."
+}
