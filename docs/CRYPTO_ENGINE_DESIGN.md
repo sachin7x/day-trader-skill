@@ -13,8 +13,13 @@ crypto/
   scanner.py                Transparent opportunity ranking
   strategies.py              Independent deterministic strategies
   risk.py                    Fee/slippage-aware sizing and hard blocks
+  data.py                    Candle completion, deduplication and gap checks
+  derivatives.py             Funding/OI/basis diagnostics with evidence labels
+  venues.py                  Dated jurisdiction and product eligibility gate
+  india.py                   FY labels, tax-period references and CSV export
   backtesting.py             Event-driven OHLCV simulator
   execution.py               Idempotent paper ledger; live call hard-disabled
+  cli.py                     Offline CSV scan and backtest commands
   exchanges/
     base.py                  Async public market-data interface
     ccxt_public.py            Optional CCXT public-data implementation
@@ -74,6 +79,7 @@ This example uses public market data only. A successful API response is not proo
 
 - CCXT adapter exposes public OHLCV, ticker, trades, order book, funding-rate and open-interest methods only where the exchange supports them. It does not connect authenticated credentials.
 - No private balance, position, order placement, cancellation or execution-history methods are implemented.
+- The India CSV export is evidence formatting only. It does not calculate tax, decide TDS applicability or submit government forms.
 - No WebSocket streaming manager, persistent database, cross-exchange symbol normalization or reconnect supervisor yet.
 - No liquidation-cluster inference, long/short ratio, on-chain or social sentiment provider.
 - Strategy library currently contains four long-entry examples. Funding-rate mean reversion, OI divergence, liquidity sweeps, short strategies and market-regime classification remain future work.
