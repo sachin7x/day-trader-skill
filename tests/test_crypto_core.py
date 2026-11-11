@@ -61,6 +61,19 @@ class RiskTests(unittest.TestCase):
         self.assertFalse(limits.allow_leverage)
         self.assertEqual(limits.max_leverage, Decimal("1"))
 
+    def test_naive_clock_is_rejected(self):
+        with self.assertRaises(ValueError):
+            evaluate(self.signal(), self.instrument, "10000",
+                     RiskLimits(max_data_age_seconds=60), now=datetime(2026, 1, 1))
+
+    def test_daily_loss_fraction_cannot_exceed_equity(self):
+        with self.assertRaises(ValueError):
+            RiskLimits(max_daily_loss_fraction="1.1")
+
+    def test_slippage_cannot_make_a_fill_non_positive(self):
+        with self.assertRaises(ValueError):
+            RiskLimits(slippage_bps="10000")
+
 
 class PaperExecutionTests(unittest.TestCase):
     def test_idempotent_submit_and_partial_fill(self):
