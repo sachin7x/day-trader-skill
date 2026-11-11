@@ -1,6 +1,7 @@
 """Small deterministic strategies. No LLM-generated trade decisions live here."""
 from .indicators import ema, rsi, vwap, bollinger
 from .models import Signal
+from datetime import timezone
 
 
 class Strategy:
@@ -70,11 +71,16 @@ class VwapBreakout(Strategy):
     def evaluate(self, candles):
         if len(candles) < 3:
             return None
-        vw = vwap([float(c.high) for c in candles], [float(c.low) for c in candles],
-                  [float(c.close) for c in candles], [float(c.volume) for c in candles])
+        # VWAP is anchored to the current UTC day, not the entire backtest history.
+        day = candles[-1].timestamp.astimezone(timezone.utc).date()
+        session = [c for c in candles if c.timestamp.astimezone(timezone.utc).date() == day]
+        if len(session) < 2:
+            return None
+        vw = vwap([float(c.high) for c in session], [float(c.low) for c in session],
+                  [float(c.close) for c in session], [float(c.volume) for c in session])
         if vw[-2] is None or vw[-1] is None:
             return None
-        if not (float(candles[-2].close) <= vw[-2] and float(candles[-1].close) > vw[-1]):
+        if not (float(session[-2].close) <= vw[-2] and float(session[-1].close) > vw[-1]):
             return None
         last = candles[-1]
         entry = last.close
