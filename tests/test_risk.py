@@ -521,3 +521,26 @@ class Cli(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class PositiveOrderSizeValidation(unittest.TestCase):
+    def test_zero_quantity_is_blocked_even_with_valid_bracket(self):
+        order = tsla(qty="0")
+        result = check.check([order], cfg(), now=at(NOW))
+        self.assertEqual(verdicts(result), ["BLOCK"])
+        self.assertIn("format: qty must be a positive number", reasons(result))
+
+    def test_zero_notional_is_blocked_even_when_optional_stop_checks_are_off(self):
+        result = check.check([buy("TSLA", "0")], v1(), now=at(NOW))
+        self.assertEqual(verdicts(result), ["BLOCK"])
+        self.assertIn("format: notional must be a positive number", reasons(result))
+
+    def test_negative_notional_is_blocked(self):
+        result = check.check([buy("TSLA", "-100")], v1(), now=at(NOW))
+        self.assertEqual(verdicts(result), ["BLOCK"])
+        self.assertIn("format: notional must be a positive number", reasons(result))
+
+    def test_non_numeric_quantity_is_blocked(self):
+        result = check.check([tsla(qty="abc")], cfg(), now=at(NOW))
+        self.assertEqual(verdicts(result), ["BLOCK"])
+        self.assertIn("format: qty must be a positive number", reasons(result))
