@@ -1,6 +1,7 @@
 """Out-of-sample walk-forward evaluation and bootstrap Monte Carlo diagnostics."""
 from random import Random
 from statistics import mean
+import math
 from decimal import Decimal
 
 from .models import D
@@ -27,7 +28,9 @@ def monte_carlo(trades, initial_equity, paths=10000, seed=42, ruin_fraction=0.5)
     ruin_fraction = float(ruin_fraction)
     if not pnls:
         raise ValueError("at least one completed trade is required")
-    if equity0 <= 0 or paths <= 0 or not 0 < ruin_fraction < 1:
+    if not math.isfinite(equity0) or any(not math.isfinite(x) for x in pnls):
+        raise ValueError("equity and trade PnL values must be finite")
+    if not math.isfinite(ruin_fraction) or equity0 <= 0 or paths <= 0 or not 0 < ruin_fraction < 1:
         raise ValueError("invalid Monte Carlo configuration")
     rng = Random(seed)
     terminal, drawdowns = [], []
