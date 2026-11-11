@@ -5,7 +5,7 @@ inside one candle, stop is assumed to execute first. Stop gaps fill at the worse
 of the stop and bar open. Strategy decisions only see candles up to the decision
 bar; entries cannot fill on that same bar.
 """
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from decimal import Decimal, ROUND_DOWN
 from statistics import mean, pstdev
 from .models import D, RiskLimits, Signal
@@ -33,6 +33,8 @@ class BacktestConfig:
             raise ValueError("initial_cash must be positive and participation_rate in (0, 1]")
         if min(self.risk_fraction, self.max_notional_fraction, self.fee_rate, self.slippage_bps) < 0:
             raise ValueError("cost and risk parameters cannot be negative")
+        if self.risk_fraction > 1 or self.max_notional_fraction > 1 or self.fee_rate >= 1:
+            raise ValueError("risk fractions must be <= 1 and fee_rate must be < 1")
 
 
 def _fill_price(price, side, bps):
@@ -114,7 +116,8 @@ def run_backtest(candles, strategy, instrument, config=None):
                                 max_notional_fraction=cfg.max_notional_fraction,
                                 max_data_age_seconds=60 * 60 * 24,
                                 slippage_bps=cfg.slippage_bps)
-            decision = evaluate(adjusted, instrument, cash, limits, now=next_bar.timestamp,
+            risk_instrument = replace(instrument, taker_fee=cfg.fee_rate)
+            decision = evaluate(adjusted, risk_instrument, cash, limits, now=next_bar.timestamp,
                                 available_balance=cash)
             if not decision.allowed:
                 curve.append({"timestamp": bar.timestamp.isoformat(), "equity": cash})
