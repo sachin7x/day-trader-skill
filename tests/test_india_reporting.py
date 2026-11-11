@@ -34,7 +34,7 @@ class IndiaReportingTests(unittest.TestCase):
             with open(path, encoding="utf-8") as handle:
                 content = handle.read()
             self.assertIn("2026-27", content)
-            self.assertIn("Asia/Kolkata", content)
+            self.assertIn("+05:30", content)
 
 
 class VenueGateTests(unittest.TestCase):
