@@ -19,7 +19,7 @@ crypto/
   india.py                   FY labels, tax-period references and CSV export
   ledger.py                  SQLite append-only, idempotent fill records
   backtesting.py             Event-driven OHLCV simulator
-  execution.py               Idempotent paper ledger; live call hard-disabled
+  execution.py               Idempotent paper ledger, in-process kill switch/cancel-all; live call hard-disabled
   cli.py                     Offline CSV scan and backtest commands
   exchanges/
     base.py                  Async public market-data interface
