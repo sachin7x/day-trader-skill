@@ -87,17 +87,19 @@ def _metrics(trades, equity_curve, initial):
     }
 
 
-def run_backtest(candles, strategy, instrument, config=None):
+def run_backtest(candles, strategy, instrument, config=None, start_index=0):
     cfg = config or BacktestConfig()
     bars = sorted(candles, key=lambda c: c.timestamp)
     if len(bars) < 3:
         raise ValueError("at least three candles are required")
+    if start_index < 0 or start_index >= len(bars) - 1:
+        raise ValueError("start_index must leave at least one candle for execution")
     if any(bars[i].timestamp == bars[i - 1].timestamp for i in range(1, len(bars))):
         raise ValueError("duplicate candle timestamps")
     cash = cfg.initial_cash
     position = None
     trades, curve = [], []
-    i = 0
+    i = start_index
     while i < len(bars) - 1:
         bar = bars[i]
         if position is None:
