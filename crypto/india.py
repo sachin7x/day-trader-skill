@@ -7,9 +7,19 @@ from decimal import Decimal, ROUND_HALF_UP
 IST = timezone(timedelta(hours=5, minutes=30), name="Asia/Kolkata")
 
 
+def _india_date(value):
+    if isinstance(value, datetime):
+        if value.tzinfo is None:
+            raise ValueError("datetime must be timezone-aware")
+        return value.astimezone(IST).date()
+    if isinstance(value, date):
+        return value
+    raise TypeError("expected date or timezone-aware datetime")
+
+
 def financial_year(value):
-    """Indian financial year label, e.g. 2026-27."""
-    d = value.date() if isinstance(value, datetime) else value
+    """Indian financial year label, e.g. 2026-27, using Asia/Kolkata date."""
+    d = _india_date(value)
     start = d.year if d.month >= 4 else d.year - 1
     return "%d-%02d" % (start, (start + 1) % 100)
 
@@ -20,7 +30,7 @@ def tax_regime_for_transaction(value):
     This is a date-based export label only. The transaction's legal character,
     payer category, thresholds and exemptions still require professional review.
     """
-    d = value.date() if isinstance(value, datetime) else value
+    d = _india_date(value)
     if d <= date(2026, 3, 31):
         return {
             "act": "Income-tax Act, 1961",
