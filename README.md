@@ -232,6 +232,7 @@ Current capabilities:
 - Dated venue eligibility checks and observed-versus-inferred perpetual diagnostics.
 - An append-only SQLite fill ledger with duplicate-trade protection.
 - Fixed-rule walk-forward evaluation and bootstrap Monte Carlo scenario analysis.
+- Evidence-gated trade briefs that can return STRONG SETUP, WATCH, NO TRADE or BLOCKED BY RISK without fabricating probabilities.
 - Offline CSV commands: `python -m crypto scan` and `python -m crypto backtest`.
 
 Start with `docs/CRYPTO_ENGINE_DESIGN.md`. This increment does not submit live orders, read exchange balances, or enable leverage. CCXT connectivity is public market data only. Exchange access and Indian regulatory status must be independently verified before selecting a venue.
