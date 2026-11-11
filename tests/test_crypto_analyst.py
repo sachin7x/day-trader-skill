@@ -42,6 +42,14 @@ class AnalystTests(unittest.TestCase):
         brief = build_trade_brief(self.signal, self.risk, self.market, now=self.now)
         self.assertEqual(brief["decision"], "WATCH")
 
+    def test_trend_conflict_prevents_strong_setup(self):
+        oos = {"sample_type": "out_of_sample", "trades": 50, "expectancy": 0.2,
+               "profit_factor": 1.4, "max_drawdown": 0.1}
+        market = dict(self.market, trend="down")
+        brief = build_trade_brief(self.signal, self.risk, market, oos, now=self.now)
+        self.assertEqual(brief["decision"], "WATCH")
+        self.assertTrue(any("conflicts" in reason for reason in brief["reasons_against"]))
+
     def test_stale_market_data_is_blocked(self):
         brief = build_trade_brief(self.signal, self.risk, self.market,
                                   now=self.now + timedelta(minutes=1))
