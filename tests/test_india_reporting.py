@@ -17,6 +17,11 @@ class IndiaReportingTests(unittest.TestCase):
         self.assertEqual(tax_regime_for_transaction(date(2026, 3, 31))["tds_reference"], "section 194S")
         self.assertIn("393(1)", tax_regime_for_transaction(date(2026, 4, 1))["tds_reference"])
 
+    def test_tax_regime_uses_india_local_date(self):
+        utc_evening = datetime(2026, 3, 31, 19, 0, tzinfo=timezone.utc)
+        self.assertIn("393(1)", tax_regime_for_transaction(utc_evening)["tds_reference"])
+        self.assertEqual(financial_year(utc_evening), "2026-27")
+
     def test_inr_requires_explicit_fx_rate(self):
         self.assertEqual(to_inr("2.5", "83.25"), Decimal("208.13"))
         with self.assertRaises(ValueError):
