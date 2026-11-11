@@ -17,6 +17,7 @@ crypto/
   derivatives.py             Funding/OI/basis diagnostics with evidence labels
   venues.py                  Dated jurisdiction and product eligibility gate
   india.py                   FY labels, tax-period references and CSV export
+  ledger.py                  SQLite append-only, idempotent fill records
   backtesting.py             Event-driven OHLCV simulator
   execution.py               Idempotent paper ledger; live call hard-disabled
   cli.py                     Offline CSV scan and backtest commands
@@ -80,7 +81,7 @@ This example uses public market data only. A successful API response is not proo
 - CCXT adapter exposes public OHLCV, ticker, trades, order book, funding-rate and open-interest methods only where the exchange supports them. It does not connect authenticated credentials.
 - No private balance, position, order placement, cancellation or execution-history methods are implemented.
 - The India CSV export is evidence formatting only. It does not calculate tax, decide TDS applicability or submit government forms.
-- No WebSocket streaming manager, persistent database, cross-exchange symbol normalization or reconnect supervisor yet.
+- The SQLite fill ledger is implemented, but a complete cash/position portfolio ledger, migrations, and PostgreSQL backend are not yet implemented. No WebSocket streaming manager, cross-exchange symbol normalization or reconnect supervisor yet.
 - No liquidation-cluster inference, long/short ratio, on-chain or social sentiment provider.
 - Strategy library currently contains four long-entry examples. Funding-rate mean reversion, OI divergence, liquidity sweeps, short strategies and market-regime classification remain future work.
 - Backtesting supports one open position at a time and does not yet model portfolio correlation, multiple simultaneous assets, order-book depth, exchange-specific funding schedules or risk of ruin. Risk of ruin is deliberately reported as `null`, not guessed.
