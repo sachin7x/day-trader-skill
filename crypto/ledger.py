@@ -55,7 +55,18 @@ class FillLedger:
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (venue.lower(), str(trade_id), order_id, client_order_id, symbol.upper(),
                   side, str(qty), str(px), str(fee_value), fee_currency, stamp, raw_json))
-            return cur.rowcount == 1
+            if cur.rowcount == 1:
+                return True
+            existing = db.execute(
+                "SELECT symbol, side, quantity, price, fee, timestamp_utc FROM fills WHERE venue = ? AND trade_id = ?",
+                (venue.lower(), str(trade_id))
+            ).fetchone()
+            expected = (symbol.upper(), side, str(qty), str(px), str(fee_value), stamp)
+            actual = tuple(existing[k] for k in
+                           ("symbol", "side", "quantity", "price", "fee", "timestamp_utc"))
+            if actual != expected:
+                raise ValueError("duplicate venue/trade_id arrived with conflicting fill data")
+            return False
 
     def list_fills(self, symbol=None, since=None, limit=10000):
         if limit <= 0:
