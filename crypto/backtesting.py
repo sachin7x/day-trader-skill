@@ -60,12 +60,24 @@ def _metrics(trades, equity_curve, initial):
     vol = pstdev(returns) if len(returns) > 1 else 0.0
     downside = [x for x in returns if x < 0]
     down_vol = (sum(x * x for x in downside) / len(downside)) ** 0.5 if downside else 0.0
+    seconds = []
+    for i in range(1, len(equity_curve)):
+        try:
+            from datetime import datetime
+            a = datetime.fromisoformat(equity_curve[i - 1]["timestamp"])
+            b = datetime.fromisoformat(equity_curve[i]["timestamp"])
+            seconds.append((b - a).total_seconds())
+        except (TypeError, ValueError):
+            pass
+    step = sorted(x for x in seconds if x > 0)
+    periods_per_year = (365 * 24 * 60) if not step else (365 * 24 * 60 * 60 / step[len(step) // 2])
     return {
         "trades": len(trades), "win_rate": len(wins) / len(trades) if trades else 0.0,
         "profit_factor": gross_win / gross_loss if gross_loss else (float("inf") if gross_win else 0.0),
         "expectancy": mean(pnls) if pnls else 0.0, "max_drawdown": max_dd,
-        "sharpe_annualized_24_7": (avg / vol * (365 * 24 * 60) ** 0.5) if vol else 0.0,
-        "sortino_annualized_24_7": (avg / down_vol * (365 * 24 * 60) ** 0.5) if down_vol else 0.0,
+        "sharpe_annualized": (avg / vol * periods_per_year ** 0.5) if vol else 0.0,
+        "sortino_annualized": (avg / down_vol * periods_per_year ** 0.5) if down_vol else 0.0,
+        "periods_per_year_assumption": periods_per_year,
         "gross_profit": gross_win, "gross_loss": gross_loss,
         "net_profit": sum(pnls), "risk_of_ruin": None,
         "note": "Annualized ratios assume one-minute observations only; interpret cautiously for other timeframes."
@@ -117,12 +129,13 @@ def run_backtest(candles, strategy, instrument, config=None):
                 continue
             notional = qty * entry * instrument.contract_multiplier
             fee = notional * cfg.fee_rate
-            if signal.side == "buy" and notional + fee > cash:
+            is_perpetual = instrument.asset_class == "crypto_perpetual"
+            if not is_perpetual and signal.side == "buy" and notional + fee > cash:
                 curve.append({"timestamp": bar.timestamp.isoformat(), "equity": cash})
                 i += 1
                 continue
             cash -= fee
-            if signal.side == "buy":
+            if not is_perpetual and signal.side == "buy":
                 cash -= notional
             position = {"signal": signal, "side": signal.side, "qty": qty,
                         "entry": entry, "entry_fee": fee, "entry_time": next_bar.timestamp,
@@ -156,7 +169,9 @@ def run_backtest(candles, strategy, instrument, config=None):
             gross = ((exit_price - position["entry"]) if side == "buy"
                      else (position["entry"] - exit_price)) * position["qty"] * instrument.contract_multiplier
             net = gross - position["entry_fee"] - exit_fee
-            if side == "buy":
+            if instrument.asset_class == "crypto_perpetual":
+                cash += gross
+            elif side == "buy":
                 cash += exit_notional
             cash -= exit_fee
             trades.append({
@@ -165,12 +180,17 @@ def run_backtest(candles, strategy, instrument, config=None):
                 "exit_time": bar.timestamp.isoformat(), "entry": str(position["entry"]),
                 "exit": str(exit_price), "gross_pnl": str(gross),
                 "fees": str(position["entry_fee"] + exit_fee), "net_pnl": str(net),
-                "reason": exit_reason, "partial_fill": position["qty"] < decision.quantity if "decision" in locals() else False
+                "reason": exit_reason, "partial_fill": position["qty"] < decision.quantity
             })
             position = None
         mark = cash
-        if position is not None and position["side"] == "buy":
-            mark += position["qty"] * bar.close * instrument.contract_multiplier
+        if position is not None:
+            if instrument.asset_class == "crypto_perpetual":
+                unrealized = ((bar.close - position["entry"]) if position["side"] == "buy"
+                              else (position["entry"] - bar.close))
+                mark += position["qty"] * unrealized * instrument.contract_multiplier
+            elif position["side"] == "buy":
+                mark += position["qty"] * bar.close * instrument.contract_multiplier
         curve.append({"timestamp": bar.timestamp.isoformat(), "equity": mark})
         i += 1
 
@@ -184,7 +204,9 @@ def run_backtest(candles, strategy, instrument, config=None):
         gross = ((exit_price - position["entry"]) if side == "buy"
                  else (position["entry"] - exit_price)) * position["qty"] * instrument.contract_multiplier
         net = gross - position["entry_fee"] - fee
-        if side == "buy":
+        if instrument.asset_class == "crypto_perpetual":
+            cash += gross
+        elif side == "buy":
             cash += notional
         cash -= fee
         trades.append({"strategy": position["signal"].strategy, "symbol": instrument.symbol,
@@ -194,6 +216,8 @@ def run_backtest(candles, strategy, instrument, config=None):
                        "net_pnl": str(net), "reason": "end_of_data", "partial_fill": False})
     if not curve or curve[-1]["timestamp"] != bars[-1].timestamp.isoformat():
         curve.append({"timestamp": bars[-1].timestamp.isoformat(), "equity": cash})
+    else:
+        curve[-1]["equity"] = cash
     return {"instrument": instrument.symbol, "venue": instrument.venue,
             "initial_cash": str(cfg.initial_cash), "final_cash": str(cash),
             "trades": trades, "equity_curve": curve,
