@@ -1,12 +1,13 @@
 """Evidence-led trade brief generator; deterministic and confidence-free."""
-from decimal import Decimal
+from datetime import datetime, timezone
+import math
 
 from .models import Signal, D
 
 
 def build_trade_brief(signal, risk_decision, market, oos_performance=None,
                       derivatives=None, news=None, min_oos_trades=30,
-                      max_oos_drawdown=0.20):
+                      max_oos_drawdown=0.20, now=None, max_data_age_seconds=30):
     """Build a transparent brief. Missing evidence lowers the decision to WATCH."""
     market = market or {}
     derivatives = derivatives or {}
@@ -21,11 +22,33 @@ def build_trade_brief(signal, risk_decision, market, oos_performance=None,
         }
     if not isinstance(signal, Signal):
         raise TypeError("signal must be a Signal")
-    if not market.get("timestamp") or not market.get("price"):
+    if not market.get("timestamp") or market.get("price") is None:
         return {
             "decision": "BLOCKED BY RISK", "symbol": signal.symbol,
             "reasons_for": list(signal.rationale),
             "reasons_against": ["Current market price or timestamp is missing."],
+            "invalidation_conditions": list(signal.invalidation),
+            "historical_performance": oos_performance, "news": news,
+            "derivatives": derivatives
+        }
+    try:
+        price = float(market["price"])
+        stamp = market["timestamp"]
+        if isinstance(stamp, str):
+            stamp = datetime.fromisoformat(stamp.replace("Z", "+00:00"))
+        if not isinstance(stamp, datetime) or stamp.tzinfo is None:
+            raise ValueError("market timestamp must be timezone-aware")
+        now = now or datetime.now(timezone.utc)
+        if now.tzinfo is None or max_data_age_seconds <= 0:
+            raise ValueError("clock must be timezone-aware and max_data_age_seconds positive")
+        age = (now - stamp).total_seconds()
+        if not math.isfinite(price) or price <= 0 or age < -5 or age > max_data_age_seconds:
+            raise ValueError("market snapshot price is invalid or data is stale")
+    except (TypeError, ValueError, OverflowError) as exc:
+        return {
+            "decision": "BLOCKED BY RISK", "symbol": signal.symbol,
+            "reasons_for": list(signal.rationale),
+            "reasons_against": [str(exc)],
             "invalidation_conditions": list(signal.invalidation),
             "historical_performance": oos_performance, "news": news,
             "derivatives": derivatives
