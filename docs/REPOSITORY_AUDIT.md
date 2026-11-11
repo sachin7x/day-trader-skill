@@ -33,7 +33,8 @@ Preserve the existing skills as the US-equity compatibility layer. Add a separat
 | A-07 | **Medium** | NYSE holiday and early-close tables are embedded in scanner, risk, budget, alerts, and Time Machine code and cover named calendar years. | Calendar behavior becomes stale and duplicated; it is unsuitable for Indian equities or 24/7 crypto. | Keep crypto UTC/24-7. Centralize exchange calendars for equities and use maintained market-calendar data where appropriate. |
 | A-08 | **Medium** | Workflow state is passed through files such as `trader/orders.json`, `trader/state/risk.json`, and `trader/state/broker.json`. | Concurrent processes can race or overwrite state; there is no transactional portfolio/event ledger. | Start with SQLite transactions and an append-only order/fill/event ledger. Preserve JSON exports for skill interoperability. |
 | A-09 | **Medium** | The README describes a 10,000-path replay and historical replay over recent intraday stock bars. | This is useful as a scenario tool, but it is not a multi-year, multi-regime, cost-aware research framework and must not be interpreted as calibrated win probability. | Add walk-forward/out-of-sample evaluation, cost-aware metrics, regime splits, parameter sensitivity and explicit sample-size reporting. |
-| A-10 | **Low** | The tree has tests and fixtures, but no root packaging/dependency manifest or visible CI/lint/type-check configuration. | Reproducibility and contributor onboarding are harder as the codebase grows. | Add optional dependency groups, documented Python support, deterministic tests and CI without disturbing the zero-dependency equity tools. |
+| A-10 | **Medium** | The original tree has no root packaging/dependency manifest or visible CI/lint/type-check configuration. | Reproducibility and contributor onboarding are harder as the codebase grows. | A Python 3.8/3.12 offline unittest workflow was added on this feature branch. A packaging manifest and lint/type-check policy remain open. |
+| A-11 | **High** | `trader-risk/check.py`: `_f()` accepted NaN/Infinity, and order `qty`/`notional` fields were not required to be finite and strictly positive. A zero-size order could avoid the normal size checks under permissive settings. | A malformed order could receive PASS despite having no valid positive size; non-finite values could also poison account arithmetic. | Fixed on this branch: reject non-finite numeric inputs and reject zero, negative or malformed quantities/notionals. Added regression tests for zero, negative, NaN and Infinity. |
 
 ## Existing strengths to preserve
 
@@ -50,6 +51,9 @@ The first crypto increment should be research and paper-trading only. It must no
 
 ## Verification status
 
-- Repository tree and source files: inspected through GitHub.
+- Original repository tree, all 11 skill instructions, and all 11 original Python implementations: inspected through GitHub.
 - Feature branch: created from `main`.
-- Existing test suite: **not run**. The GitHub source connector is available, but this environment could not resolve `github.com` for a local clone. Do not interpret source inspection as a passing test run.
+- GitHub Actions workflow added for Python 3.8 and 3.12.
+- Initial CI runs exposed and fixed a repository-root assertion mismatch and an INR rounding expectation. The original plus crypto suite passed on Python 3.8 and 3.12 at commit `214d830` (333 tests).
+- Additional SQLite-ledger and stock-risk regression tests were added after that green run. Their latest CI runs must be checked before treating the current branch as green.
+- No live exchange APIs or private account endpoints have been called. No live order path is implemented.
