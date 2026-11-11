@@ -79,6 +79,14 @@ def build_trade_brief(signal, risk_decision, market, oos_performance=None,
         reasons_for.append("Market regime: %s" % market["regime"])
     if market.get("trend"):
         reasons_for.append("Observed trend: %s" % market["trend"])
+        trend = str(market["trend"]).lower()
+        if signal.side == "buy" and trend in ("down", "bearish", "downtrend"):
+            reasons_against.append("Observed trend conflicts with the long setup.")
+        if signal.side == "sell" and trend in ("up", "bullish", "uptrend"):
+            reasons_against.append("Observed trend conflicts with the short setup.")
+    regime = str(market.get("regime", "")).lower()
+    if "sideways" in regime or "range" in regime:
+        reasons_against.append("Market regime is range-bound; breakout/continuation evidence needs extra confirmation.")
     if market.get("volume_confirmed") is True:
         reasons_for.append("Volume confirmation is present in the supplied snapshot.")
     else:
