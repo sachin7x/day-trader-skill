@@ -1,11 +1,10 @@
 """India reporting helpers. These classify records; they do not compute tax liability."""
 import csv
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timezone, timedelta
 from decimal import Decimal
-from zoneinfo import ZoneInfo
 
 
-IST = ZoneInfo("Asia/Kolkata")
+IST = timezone(timedelta(hours=5, minutes=30), name="Asia/Kolkata")
 
 
 def financial_year(value):
@@ -68,6 +67,8 @@ def export_transactions_csv(records, path):
             raw["timestamp_utc"] = utc.isoformat()
             raw["timestamp_ist"] = ist.isoformat()
             raw["financial_year"] = financial_year(ist)
+            if raw.get("quote_value") is not None and raw.get("inr_per_quote_unit") is not None:
+                raw["inr_value"] = str(to_inr(raw["quote_value"], raw["inr_per_quote_unit"]))
             raw["timestamp"] = None
             writer.writerow(raw)
             count += 1
