@@ -86,7 +86,7 @@ This example uses public market data only. A successful API response is not proo
 - Strategy library currently contains four long-entry examples. Funding-rate mean reversion, OI divergence, liquidity sweeps, short strategies and market-regime classification remain future work.
 - Backtesting supports one open position at a time and does not yet model portfolio correlation, multiple simultaneous assets, order-book depth, exchange-specific funding schedules or risk of ruin. Risk of ruin is deliberately reported as `null`, not guessed.
 - Annualized Sharpe/Sortino values are estimates based on the median candle interval and assume independent observations. Use raw return, drawdown and trade-level results first.
-- The example scanner score is a transparent ranking heuristic, not a validated predictive model.
+- The example scanner score is a transparent ranking heuristic, not a validated predictive model. Its 24-hour quote-volume field is estimated as candle base volume multiplied by candle close; it is not the exchange's authoritative quote-volume field and may be wrong for contract-volume markets. It skips symbols without a full 24-hour candle window.
 
 ## Next implementation phases
 
