@@ -1,5 +1,6 @@
 import unittest
 from datetime import datetime, timezone, timedelta
+from decimal import Decimal
 
 from crypto.models import Candle, Instrument, Signal
 from crypto.backtesting import BacktestConfig, run_backtest
@@ -58,5 +59,4 @@ class BacktestTests(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    from decimal import Decimal
     unittest.main()
