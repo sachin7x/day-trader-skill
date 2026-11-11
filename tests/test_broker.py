@@ -305,3 +305,27 @@ class Flow(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class FillInputValidation(unittest.TestCase):
+    def test_non_finite_fill_is_rejected_before_portfolio_mutation(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            portfolio = os.path.join(tmp, "portfolio.json")
+            with self.assertRaises(ticket.TicketError):
+                ticket.apply_fill(portfolio, {"budget": 1000}, "TSLA", "buy",
+                                  "NaN", "100", TODAY)
+            self.assertFalse(os.path.exists(portfolio))
+
+    def test_invalid_side_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            portfolio = os.path.join(tmp, "portfolio.json")
+            with self.assertRaises(ticket.TicketError):
+                ticket.apply_fill(portfolio, {"budget": 1000}, "TSLA", "hold",
+                                  "1", "100", TODAY)
+
+    def test_infinite_fill_price_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            portfolio = os.path.join(tmp, "portfolio.json")
+            with self.assertRaises(ticket.TicketError):
+                ticket.apply_fill(portfolio, {"budget": 1000}, "TSLA", "buy",
+                                  "1", "Infinity", TODAY)
