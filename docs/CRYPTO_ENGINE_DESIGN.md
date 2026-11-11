@@ -20,6 +20,7 @@ crypto/
   ledger.py                  SQLite append-only, idempotent fill records
   backtesting.py             Event-driven OHLCV simulator
   research.py                 Walk-forward folds and bootstrap Monte Carlo
+  analyst.py                  Evidence-gated trade brief; no generated probabilities
   execution.py               Idempotent paper ledger, in-process kill switch/cancel-all; live call hard-disabled
   cli.py                     Offline CSV scan and backtest commands
   exchanges/
@@ -85,6 +86,7 @@ This example uses public market data only. A successful API response is not proo
 - The SQLite fill ledger is implemented, but a complete cash/position portfolio ledger, migrations, and PostgreSQL backend are not yet implemented. No WebSocket streaming manager, cross-exchange symbol normalization or reconnect supervisor yet.
 - No liquidation-cluster inference, long/short ratio, on-chain or social sentiment provider.
 - Strategy library currently contains four long-entry examples. Funding-rate mean reversion, OI divergence, liquidity sweeps, short strategies and market-regime classification remain future work.
+- The trade analyst is a deterministic evidence gate, not a connected LLM. It requires a passed risk decision and out-of-sample statistics before returning STRONG SETUP; it never invents confidence probabilities.
 - Backtesting supports one open position at a time and does not yet model portfolio correlation, multiple simultaneous assets, order-book depth or exchange-specific funding schedules. The single-run metrics leave risk of ruin as `null`; the separate bootstrap tool reports sample-conditional empirical ruin frequency, not a forecast.
 - Walk-forward evaluation applies fixed rules to rolling out-of-sample segments; it does not optimize parameters. Each fold resets equity independently. Monte Carlo resamples completed trade PnL with replacement and is conditional on the observed sample.
 - Annualized Sharpe/Sortino values are estimates based on the median candle interval and assume independent observations. Use raw return, drawdown and trade-level results first.
