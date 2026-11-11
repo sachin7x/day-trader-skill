@@ -228,5 +228,8 @@ Current capabilities:
 - Fee- and slippage-aware position sizing.
 - Event-driven OHLCV backtesting with next-candle entries, conservative stop-first handling, stop-gap slippage, participation caps and optional perpetual funding inputs.
 - Idempotent paper order ledger and a public-only optional CCXT market-data adapter.
+- India financial-year labels, old/new TDS statutory references, explicit historical FX conversion, and transaction CSV export.
+- Dated venue eligibility checks and observed-versus-inferred perpetual diagnostics.
+- Offline CSV commands: `python -m crypto scan` and `python -m crypto backtest`.
 
 Start with `docs/CRYPTO_ENGINE_DESIGN.md`. This increment does not submit live orders, read exchange balances, or enable leverage. CCXT connectivity is public market data only. Exchange access and Indian regulatory status must be independently verified before selecting a venue.
