@@ -10,9 +10,10 @@
   "slippage_bps": 5,
   "participation_rate": 0.02,
   "market_data": {
-    "exchange": "binance",
+    "exchange": null,
     "timeframe": "5m",
     "symbols": ["BTC/USDT", "ETH/USDT", "SOL/USDT"]
   },
-  "note": "Example only. Exchange availability and legality are not inferred from API connectivity. No credentials belong in this file."
+  "venue_review_required": true,
+  "note": "Example only. Set an exchange only after checking current jurisdiction and API permissions. Exchange availability and legality are not inferred from API connectivity. No credentials belong in this file."
 }
