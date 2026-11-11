@@ -1,7 +1,7 @@
 """India reporting helpers. These classify records; they do not compute tax liability."""
 import csv
 from datetime import date, datetime, timezone, timedelta
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 
 
 IST = timezone(timedelta(hours=5, minutes=30), name="Asia/Kolkata")
@@ -40,7 +40,7 @@ def to_inr(amount, inr_per_quote_unit):
     rate = Decimal(str(inr_per_quote_unit))
     if amount < 0 or rate <= 0:
         raise ValueError("amount must be non-negative and FX rate must be positive")
-    return (amount * rate).quantize(Decimal("0.01"))
+    return (amount * rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
 def export_transactions_csv(records, path):
