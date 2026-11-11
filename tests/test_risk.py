@@ -544,3 +544,13 @@ class PositiveOrderSizeValidation(unittest.TestCase):
         result = check.check([tsla(qty="abc")], cfg(), now=at(NOW))
         self.assertEqual(verdicts(result), ["BLOCK"])
         self.assertIn("format: qty must be a positive number", reasons(result))
+
+    def test_nan_quantity_is_blocked(self):
+        result = check.check([tsla(qty="NaN")], cfg(), now=at(NOW))
+        self.assertEqual(verdicts(result), ["BLOCK"])
+        self.assertIn("format: qty must be a positive number", reasons(result))
+
+    def test_infinite_notional_is_blocked(self):
+        result = check.check([buy("TSLA", "Infinity")], v1(), now=at(NOW))
+        self.assertEqual(verdicts(result), ["BLOCK"])
+        self.assertIn("format: notional must be a positive number", reasons(result))
