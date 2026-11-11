@@ -78,7 +78,7 @@ def evaluate(signal, instrument, equity, limits=None, now=None, current_daily_pn
     if daily_pnl <= -daily_limit:
         return RiskDecision(False, D("0"), D("0"), D("0"), D("0"),
                             ("daily loss limit has already been reached",), tuple(warnings))
-    daily_remaining = max(D("0"), daily_limit + daily_pnl)
+    daily_remaining = max(D("0"), daily_limit + min(daily_pnl, D("0")))
     risk_budget = min(risk_budget, daily_remaining)
     max_notional = equity * limits.max_notional_fraction
     leverage = D("1") if not limits.allow_leverage else min(limits.max_leverage, instrument.max_leverage)
