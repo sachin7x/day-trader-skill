@@ -22,6 +22,8 @@ Run a deterministic strategy backtest:
 python -m crypto backtest --csv data/BTCUSDT-5m.csv --symbol BTC/USDT --timeframe 5m --strategy ema_cross --cash 10000
 ```
 
+The Python API also exposes `crypto.research.walk_forward` for fixed-rule out-of-sample folds and `crypto.research.monte_carlo` for bootstrap scenario analysis of completed trades.
+
 For a perpetual research simulation, pass `--asset-class crypto_perpetual`. This does not enable leverage or live execution. Funding data is currently supplied programmatically to `BacktestConfig`, not loaded by the CLI.
 
 ## Public exchange data
