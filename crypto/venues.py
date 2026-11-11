@@ -18,12 +18,18 @@ class VenueAssessment:
     fiu_registration_applicable: bool = False
     fiu_registration_verified: bool = False
     checked_on: date = None
+    api_permissions_verified: bool = False
+    withdrawal_permission_enabled: bool = False
 
     def eligibility(self, asset_class, today=None, max_age_days=90):
         today = today or datetime.now(timezone.utc).date()
         reasons = []
         if not self.local_legal_reviewed:
             reasons.append("local legal/access review is not recorded")
+        if not self.api_permissions_verified:
+            reasons.append("actual API permissions have not been verified")
+        if self.withdrawal_permission_enabled:
+            reasons.append("withdrawal permission is enabled; disable it before trading integration")
         if self.checked_on is None:
             reasons.append("venue review date is missing")
         elif (today - self.checked_on).days < 0 or (today - self.checked_on).days > max_age_days:
