@@ -436,6 +436,14 @@ def check(orders, cfg, portfolio=None, prices=None, state=None, today=None, now=
             reasons.append("format: side must be buy or sell, got %r" % o.get("side"))
         if (qty is None) == (notional is None):
             reasons.append("format: give exactly one of qty or notional")
+        if qty is not None:
+            qty_value = _f(qty)
+            if qty_value is None or qty_value <= 0:
+                reasons.append("format: qty must be a positive number, got %r" % qty)
+        if notional is not None:
+            notional_value = _f(notional)
+            if notional_value is None or notional_value <= 0:
+                reasons.append("format: notional must be a positive number, got %r" % notional)
         for k in PRICE_FIELDS:
             if o.get(k) is not None:
                 v = _f(o.get(k))
