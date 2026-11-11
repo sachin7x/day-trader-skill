@@ -1,5 +1,6 @@
 import unittest
 from datetime import datetime, timezone, timedelta
+from decimal import Decimal
 
 from crypto.models import Candle, Instrument, Signal
 from crypto.backtesting import BacktestConfig
@@ -12,7 +13,7 @@ class OneShot:
             return None
         bar = candles[-1]
         return Signal("one", bar.symbol, "buy", bar.timestamp, bar.close,
-                      bar.close * 0.98, bar.close * 1.04)
+                      bar.close * Decimal('0.98'), bar.close * Decimal('1.04'))
 
 
 class ResearchTests(unittest.TestCase):
