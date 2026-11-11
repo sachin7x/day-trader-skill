@@ -37,6 +37,7 @@ import argparse
 import datetime
 import hashlib
 import json
+import math
 import os
 import re
 import sys
@@ -401,9 +402,14 @@ def apply_fill(portfolio_path, cfg, symbol, side, qty, price, date):
             raise TicketError("no %s yet and no budget in the config to start it from" % portfolio_path)
         pf = {"cash": float(budget), "positions": []}
     symbol = symbol.upper()
-    qty, price = float(qty), float(price)
-    if qty <= 0 or price <= 0:
-        raise TicketError("a fill needs a positive qty and price")
+    if side not in ("buy", "sell"):
+        raise TicketError("a fill side must be buy or sell")
+    try:
+        qty, price = float(qty), float(price)
+    except (TypeError, ValueError, OverflowError):
+        raise TicketError("a fill needs numeric qty and price")
+    if not math.isfinite(qty) or not math.isfinite(price) or qty <= 0 or price <= 0:
+        raise TicketError("a fill needs finite, positive qty and price")
     cost = round(qty * price, 2)
     pos = None
     for p in pf.setdefault("positions", []):
@@ -441,11 +447,19 @@ def apply_fill(portfolio_path, cfg, symbol, side, qty, price, date):
 
 def log_fill(state_path, now, today, symbol, side, qty, price):
     """A fill in the log, so trader-risk can count day trades (a buy and a sell the same day)."""
+    if side not in ("buy", "sell"):
+        raise TicketError("a fill side must be buy or sell")
+    try:
+        qty_value, price_value = float(qty), float(price)
+    except (TypeError, ValueError, OverflowError):
+        raise TicketError("a fill needs numeric qty and price")
+    if not math.isfinite(qty_value) or not math.isfinite(price_value) or qty_value <= 0 or price_value <= 0:
+        raise TicketError("a fill needs finite, positive qty and price")
     state = load_state(state_path)
-    state.setdefault("orders", []).append({
+    state.setdefault("orders", []).append({}
         "at": ny_iso(now), "date": today, "status": "filled", "symbol": symbol.upper(), "side": side,
-        "qty": _str_num(float(qty)), "price": float(price),
-        "plain": "%s %s %s at %s" % (side.upper(), _str_num(float(qty)), symbol.upper(), _p(price))})
+        "qty": _str_num(qty_value), "price": price_value,
+        "plain": "%s %s %s at %s" % (side.upper(), _str_num(qty_value), symbol.upper(), _p(price_value))})
     write_json(state_path, state)
 
 
