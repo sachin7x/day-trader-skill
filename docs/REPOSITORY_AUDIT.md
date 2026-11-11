@@ -56,6 +56,7 @@ The first crypto increment should be research and paper-trading only. It must no
 - Feature branch: created from `main`.
 - GitHub Actions workflow added for Python 3.8 and 3.12.
 - CI exposed and fixed a repository-root assertion mismatch, an INR rounding expectation, and an insufficient 24-hour scanner fixture.
-- Latest GitHub Actions run at commit `7e7a1c0` passed **353 tests on Python 3.8 and 353 tests on Python 3.12**.
-- Regression tests cover zero/negative/NaN/Infinity order sizes, invalid broker fills, OHLCV pagination boundaries, 24-hour volume windows, perpetual funding accounting, India tax-period labels, venue/API permission gates, and SQLite fill idempotency.
+- Latest GitHub Actions run at commit `2338ae1` passed **365 tests on Python 3.8 and 365 tests on Python 3.12**.
+- CI also compiles all repository Python modules and smoke-tests the crypto CLI entry point.
+- Regression tests cover zero/negative/NaN/Infinity order sizes, invalid broker fills, OHLCV pagination boundaries, 24-hour volume windows, perpetual funding accounting, walk-forward warmup boundaries, bootstrap determinism, India tax-period labels, venue/API permission gates, analyst staleness/conflict gates, and SQLite fill idempotency.
 - No live exchange APIs or private account endpoints have been called. No live order path is implemented.
