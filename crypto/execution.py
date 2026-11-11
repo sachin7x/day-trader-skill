@@ -23,14 +23,37 @@ class PaperOrder:
     status: str = "accepted"
 
 
+class KillSwitch:
+    """In-process emergency gate. Live execution remains separately disabled."""
+    def __init__(self):
+        self.active = False
+        self.reason = None
+
+    def activate(self, reason):
+        self.reason = str(reason or "manual emergency stop")
+        self.active = True
+
+    def reset(self, confirmed=False):
+        if not confirmed:
+            raise RuntimeError("kill switch reset requires explicit confirmation")
+        self.active = False
+        self.reason = None
+
+    def assert_permitted(self):
+        if self.active:
+            raise RuntimeError("kill switch active: %s" % self.reason)
+
+
 class PaperBroker:
     """Deterministic paper order ledger. Does not contact an exchange."""
-    def __init__(self):
+    def __init__(self, kill_switch=None):
         self.orders = {}
         self.fills = []
+        self.kill_switch = kill_switch or KillSwitch()
 
     def submit(self, instrument, side, quantity, order_type="market", limit_price=None,
                client_order_id=None):
+        self.kill_switch.assert_permitted()
         if not isinstance(instrument, Instrument):
             raise TypeError("instrument must be an Instrument")
         if side not in ("buy", "sell"):
@@ -67,6 +90,15 @@ class PaperBroker:
                            "side": order.side, "quantity": qty, "price": px, "fee": D(fee)})
         order.status = "filled" if already + qty == order.quantity else "partially_filled"
         return order
+
+    def cancel_all(self):
+        """Cancel every non-terminal paper order and return cancelled IDs."""
+        cancelled = []
+        for client_order_id, order in list(self.orders.items()):
+            if order.status not in ("filled", "cancelled"):
+                self.cancel(client_order_id)
+                cancelled.append(client_order_id)
+        return cancelled
 
     def cancel(self, client_order_id):
         order = self.orders.get(client_order_id)
