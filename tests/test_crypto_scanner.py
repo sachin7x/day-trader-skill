@@ -10,13 +10,15 @@ class ScannerTests(unittest.TestCase):
     def test_decimal_volume_threshold_is_supported(self):
         start = datetime(2026, 1, 1, tzinfo=timezone.utc)
         candles = []
-        for i in range(60):
+        for i in range(300):
             p = Decimal("100") + Decimal(i) / Decimal("10")
             candles.append(Candle(start + timedelta(minutes=5 * i), p, p + 1, p - 1,
                                   p, "10", symbol="BTC/USDT", timeframe="5m"))
         ranked = rank_market({"BTC/USDT": candles}, min_quote_volume=Decimal("100"))
         self.assertEqual(len(ranked), 1)
         self.assertEqual(ranked[0]["symbol"], "BTC/USDT")
+        self.assertEqual(ranked[0]["volume_window_bars"], 288)
+        self.assertEqual(ranked[0]["volume_source"], "candle_volume_x_close")
 
 
 if __name__ == "__main__":
