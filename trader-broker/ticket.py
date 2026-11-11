@@ -456,7 +456,7 @@ def log_fill(state_path, now, today, symbol, side, qty, price):
     if not math.isfinite(qty_value) or not math.isfinite(price_value) or qty_value <= 0 or price_value <= 0:
         raise TicketError("a fill needs finite, positive qty and price")
     state = load_state(state_path)
-    state.setdefault("orders", []).append({}
+    state.setdefault("orders", []).append({
         "at": ny_iso(now), "date": today, "status": "filled", "symbol": symbol.upper(), "side": side,
         "qty": _str_num(qty_value), "price": price_value,
         "plain": "%s %s %s at %s" % (side.upper(), _str_num(qty_value), symbol.upper(), _p(price_value))})
