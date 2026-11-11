@@ -1,4 +1,6 @@
 """Deterministic opportunity ranking. Ranking is evidence-based, not a buy signal."""
+from math import ceil
+from .data import TIMEFRAME_SECONDS
 from .indicators import atr, ema, rsi
 
 
@@ -14,7 +16,13 @@ def rank_market(candles_by_symbol, min_quote_volume=0, min_candles=60):
         lows = [float(c.low) for c in candles]
         volumes = [float(c.volume) for c in candles]
         last = candles[-1]
-        quote_volume = sum(v * c for v, c in zip(volumes[-24:], closes[-24:]))
+        seconds = TIMEFRAME_SECONDS.get(last.timeframe)
+        if seconds is None:
+            continue
+        bars_24h = max(1, int(ceil(86400 / seconds)))
+        if len(candles) < bars_24h:
+            continue
+        quote_volume = sum(v * c for v, c in zip(volumes[-bars_24h:], closes[-bars_24h:]))
         if quote_volume < min_quote_volume:
             continue
         e21, e50 = ema(closes, 21), ema(closes, 50)
@@ -30,12 +38,13 @@ def rank_market(candles_by_symbol, min_quote_volume=0, min_candles=60):
         score += min(25, quote_volume / max(min_quote_volume, 1) * 2) if min_quote_volume else 0
         ranked.append({
             "symbol": symbol, "timestamp": last.timestamp.isoformat(),
-            "last": str(last.close), "quote_volume_24": round(quote_volume, 2),
+            "last": str(last.close), "quote_volume_estimate_24h": round(quote_volume, 2),
+            "volume_window_bars": bars_24h, "volume_source": "candle_volume_x_close",
             "ema21": round(e21[-1], 8), "ema50": round(e50[-1], 8),
             "rsi14": round(rs[-1], 2), "atr14_pct": round(volatility * 100, 3),
             "momentum_7": round(momentum * 100, 3), "score": round(score, 2),
             "score_components": {"trend": trend, "momentum": round(momentum, 6),
-                                 "quote_volume_24": round(quote_volume, 2)},
+                                 "quote_volume_estimate_24h": round(quote_volume, 2)},
             "decision": "WATCH" if score >= 35 else "NO TRADE"
         })
     return sorted(ranked, key=lambda x: x["score"], reverse=True)
