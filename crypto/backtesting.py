@@ -140,7 +140,8 @@ def run_backtest(candles, strategy, instrument, config=None):
             position = {"signal": signal, "side": signal.side, "qty": qty,
                         "entry": entry, "entry_fee": fee, "entry_time": next_bar.timestamp,
                         "entry_index": i + 1, "entry_notional": notional,
-                        "stop": signal.stop_price, "target": signal.take_profit}
+                        "stop": signal.stop_price, "target": signal.take_profit,
+                        "funding_pnl": D("0")}
             i += 1
             continue
 
@@ -148,7 +149,9 @@ def run_backtest(candles, strategy, instrument, config=None):
         funding = (cfg.funding_by_timestamp or {}).get(bar.timestamp.isoformat())
         if funding is not None and instrument.asset_class == "crypto_perpetual":
             funding_cash = position["qty"] * bar.close * instrument.contract_multiplier * D(funding)
-            cash += funding_cash if position["side"] == "sell" else -funding_cash
+            funding_pnl = funding_cash if position["side"] == "sell" else -funding_cash
+            cash += funding_pnl
+            position["funding_pnl"] += funding_pnl
         side = position["side"]
         stop_hit = (bar.low <= position["stop"]) if side == "buy" else (bar.high >= position["stop"])
         target_hit = False
@@ -168,7 +171,7 @@ def run_backtest(candles, strategy, instrument, config=None):
             exit_fee = exit_notional * cfg.fee_rate
             gross = ((exit_price - position["entry"]) if side == "buy"
                      else (position["entry"] - exit_price)) * position["qty"] * instrument.contract_multiplier
-            net = gross - position["entry_fee"] - exit_fee
+            net = gross - position["entry_fee"] - exit_fee + position["funding_pnl"]
             if instrument.asset_class == "crypto_perpetual":
                 cash += gross
             elif side == "buy":
@@ -179,7 +182,8 @@ def run_backtest(candles, strategy, instrument, config=None):
                 "side": side, "qty": str(position["qty"]), "entry_time": position["entry_time"].isoformat(),
                 "exit_time": bar.timestamp.isoformat(), "entry": str(position["entry"]),
                 "exit": str(exit_price), "gross_pnl": str(gross),
-                "fees": str(position["entry_fee"] + exit_fee), "net_pnl": str(net),
+                "fees": str(position["entry_fee"] + exit_fee),
+                "funding_pnl": str(position["funding_pnl"]), "net_pnl": str(net),
                 "reason": exit_reason, "partial_fill": position["qty"] < decision.quantity
             })
             position = None
@@ -203,7 +207,7 @@ def run_backtest(candles, strategy, instrument, config=None):
         fee = notional * cfg.fee_rate
         gross = ((exit_price - position["entry"]) if side == "buy"
                  else (position["entry"] - exit_price)) * position["qty"] * instrument.contract_multiplier
-        net = gross - position["entry_fee"] - fee
+        net = gross - position["entry_fee"] - fee + position["funding_pnl"]
         if instrument.asset_class == "crypto_perpetual":
             cash += gross
         elif side == "buy":
@@ -213,7 +217,8 @@ def run_backtest(candles, strategy, instrument, config=None):
                        "side": side, "qty": str(position["qty"]), "entry_time": position["entry_time"].isoformat(),
                        "exit_time": last.timestamp.isoformat(), "entry": str(position["entry"]),
                        "exit": str(exit_price), "gross_pnl": str(gross), "fees": str(position["entry_fee"] + fee),
-                       "net_pnl": str(net), "reason": "end_of_data", "partial_fill": False})
+                       "funding_pnl": str(position["funding_pnl"]), "net_pnl": str(net),
+                       "reason": "end_of_data", "partial_fill": False})
     if not curve or curve[-1]["timestamp"] != bars[-1].timestamp.isoformat():
         curve.append({"timestamp": bars[-1].timestamp.isoformat(), "equity": cash})
     else:
