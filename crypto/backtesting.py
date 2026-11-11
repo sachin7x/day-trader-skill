@@ -75,7 +75,8 @@ def _metrics(trades, equity_curve, initial):
     periods_per_year = (365 * 24 * 60) if not step else (365 * 24 * 60 * 60 / step[len(step) // 2])
     return {
         "trades": len(trades), "win_rate": len(wins) / len(trades) if trades else 0.0,
-        "profit_factor": gross_win / gross_loss if gross_loss else (float("inf") if gross_win else 0.0),
+        "profit_factor": gross_win / gross_loss if gross_loss else None,
+        "profit_factor_unbounded": bool(gross_win and not gross_loss),
         "expectancy": mean(pnls) if pnls else 0.0, "max_drawdown": max_dd,
         "sharpe_annualized": (avg / vol * periods_per_year ** 0.5) if vol else 0.0,
         "sortino_annualized": (avg / down_vol * periods_per_year ** 0.5) if down_vol else 0.0,
