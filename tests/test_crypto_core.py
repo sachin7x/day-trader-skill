@@ -5,7 +5,7 @@ from decimal import Decimal
 from crypto.indicators import ema, rsi, atr, bollinger
 from crypto.models import Candle, Instrument, RiskLimits, Signal
 from crypto.risk import evaluate
-from crypto.execution import PaperBroker
+from crypto.execution import PaperBroker, KillSwitch
 
 
 class IndicatorTests(unittest.TestCase):
@@ -96,6 +96,22 @@ class PaperExecutionTests(unittest.TestCase):
         broker.fill("stable-id", "0.8", "100")
         with self.assertRaises(ValueError):
             broker.fill("stable-id", "0.3", "100")
+
+    def test_kill_switch_blocks_orders_and_cancels_open_orders(self):
+        instrument = Instrument("BTC/USDT", "paper", quantity_step="0.001",
+                                min_quantity="0.001")
+        switch = KillSwitch()
+        broker = PaperBroker(kill_switch=switch)
+        order = broker.submit(instrument, "buy", "1", client_order_id="open-1")
+        switch.activate("daily loss limit")
+        with self.assertRaises(RuntimeError):
+            broker.submit(instrument, "buy", "1", client_order_id="open-2")
+        self.assertEqual(broker.cancel_all(), ["open-1"])
+        self.assertEqual(order.status, "cancelled")
+        with self.assertRaises(RuntimeError):
+            switch.reset()
+        switch.reset(confirmed=True)
+        self.assertEqual(broker.submit(instrument, "buy", "1", client_order_id="open-2").status, "accepted")
 
 
 if __name__ == "__main__":
