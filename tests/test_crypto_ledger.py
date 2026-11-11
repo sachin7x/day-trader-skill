@@ -17,6 +17,9 @@ class LedgerTests(unittest.TestCase):
             fills = ledger.list_fills(symbol="BTC/USDT")
             self.assertEqual(len(fills), 1)
             self.assertEqual(fills[0]["trade_id"], "trade-1")
+            with self.assertRaises(ValueError):
+                ledger.record_fill("binance", "trade-1", "BTC/USDT", "buy", "0.2",
+                                   "90000", stamp, fee="0.09", fee_currency="USDT")
 
     def test_naive_timestamp_is_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
