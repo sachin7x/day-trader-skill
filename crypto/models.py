@@ -63,6 +63,8 @@ class Instrument:
             object.__setattr__(self, name, value)
         if self.maker_fee >= 1 or self.taker_fee >= 1:
             raise ValueError("fee rates must be fractions below 1")
+        if not self.symbol.strip() or not self.venue.strip():
+            raise ValueError("instrument symbol and venue are required")
         object.__setattr__(self, "symbol", self.symbol.upper())
         object.__setattr__(self, "venue", self.venue.lower())
 
@@ -91,7 +93,10 @@ class Signal:
                 raise ValueError("%s must be positive" % name)
             object.__setattr__(self, name, value)
         if self.take_profit is not None:
-            object.__setattr__(self, "take_profit", D(self.take_profit))
+            target = D(self.take_profit)
+            if target <= 0:
+                raise ValueError("take_profit must be positive")
+            object.__setattr__(self, "take_profit", target)
         object.__setattr__(self, "symbol", self.symbol.upper())
 
 
@@ -112,8 +117,11 @@ class RiskLimits:
             if value < 0:
                 raise ValueError("%s cannot be negative" % name)
             object.__setattr__(self, name, value)
-        if self.risk_fraction > 1 or self.max_notional_fraction > 1:
-            raise ValueError("risk and notional fractions must be <= 1")
+        if (self.risk_fraction > 1 or self.max_notional_fraction > 1 or
+                self.max_daily_loss_fraction > 1):
+            raise ValueError("risk, daily loss and notional fractions must be <= 1")
+        if self.slippage_bps >= 10000:
+            raise ValueError("slippage_bps must be below 10000")
         if self.max_data_age_seconds <= 0:
             raise ValueError("max_data_age_seconds must be positive")
         if not self.allow_leverage and self.max_leverage > 1:
