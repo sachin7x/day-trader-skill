@@ -91,6 +91,34 @@ This example uses public market data only. A successful API response is not proo
 6. Add private exchange adapters only after official API review, regional access review and security design.
 7. Add live execution only behind per-order approval, idempotency, reconciliation and an independently tested emergency stop.
 
-## India operator checklist
+## India operator checklist and regulatory data model
 
-This code does not decide whether an exchange is legally available to an India-based operator, whether an exchange is registered with FIU-IND, or how a particular trade is taxed. Verify current rules using official sources before connecting an account. Maintain immutable trade, fee, funding, deposit and withdrawal records for independent tax reconciliation. Do not put withdrawal permissions on trading API keys.
+The system treats India as a reporting and venue-review profile, not as a blanket approval to trade on any foreign venue.
+
+### Tax-period versioning
+
+The Income-tax Department states that the Income-tax Act, 2025 governs relevant TDS events on or after 1 April 2026, while the Income-tax Act, 1961 governs the earlier credit/payment event through 31 March 2026. For VDA transfer TDS, the new reference is Section 393(1), Table Sl. No. 8(vi); the old reference is Section 194S. The official portal describes Form 141 Schedule D for qualifying Individual/HUF deductors and Form 142 for VDA exchanges that have agreed to deposit TDS on behalf of buyers/brokers. The exporter records the statutory-period label but does not decide whether TDS applies, compute tax, or generate a filed return.
+
+Official references:
+- [Income Tax Department: TDS compliance and transition to the 2025 Act](https://www.incometax.gov.in/iec/foportal/help/all-topics/e-filing-services/tds-compliance)
+- [Income Tax Department: Form 141 FAQ](https://www.incometax.gov.in/iec/foportal/help/all-topics/e-filing-services/form-141-faqs?mobile-app=1)
+- [Income Tax Department: Form 142 manual](https://www.incometax.gov.in/iec/foportal/newformpage/forms/form142-um)
+
+### FIU-IND and service providers
+
+The Ministry of Finance notification dated 7 March 2023 brought specified VDA service-provider activities within the PMLA framework, including exchange between VDA and fiat, exchange between VDAs, transfers, custody/administration, and specified issuer-related financial services. FIU-IND's 8 January 2026 AML/CFT guidelines and 15 September 2025 registration circular describe registration and ongoing compliance requirements for VDA service providers within scope. This is not a substitute for checking the exact legal status of a venue or the operator's own circumstances.
+
+Official references:
+- [FIU-IND: AML/CFT Guidelines for VDA service providers, updated 8 January 2026](https://fiuindia.gov.in/pdfs/downloads/VDA08012026.pdf)
+- [FIU-IND: Third revision of VDA SP registration circular, 15 September 2025](https://fiuindia.gov.in/pdfs/downloads/VDASP15092025.pdf)
+- [FIU-IND downloads and notices](https://fiuindia.gov.in/files/Downloads/Downloads.html)
+
+### Venue access and foreign derivatives
+
+A venue's public API responding successfully does not prove that account opening, deposits, withdrawals, spot trading or perpetual derivatives are available or permitted for a particular India-based user. The `crypto/venues.py` gate therefore requires a dated, explicit operator review and separate spot/perpetual approval. FIU registration, where applicable to the service provider, is a separate fact and does not itself establish that every product is lawful or accessible to the user.
+
+SEBI has also published an advisory concerning foreign trading portals offering derivatives to Indian residents: [SEBI advisory, 30 October 2018](https://www.sebi.gov.in/media/press-releases/oct-2018/advisory-in-respect-of-foreign-trading-portals_40848.html). This is a reason to require current product- and jurisdiction-specific legal review, not a substitute for legal advice.
+
+### Record keeping
+
+Maintain immutable exchange fills, order IDs, transaction IDs, wallet transaction hashes, deposits, withdrawals, fee currency, funding, TDS and timestamped INR conversion rates. The CSV export accepts explicit historical FX rates; it never invents an INR conversion. Do not put withdrawal permissions on trading API keys.
