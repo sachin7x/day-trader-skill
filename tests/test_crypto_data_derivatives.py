@@ -1,9 +1,11 @@
 import unittest
+import asyncio
 from datetime import datetime, timezone, timedelta
 
 from crypto.models import Candle
 from crypto.data import normalize_candles
 from crypto.derivatives import DerivativesSnapshot, analyze
+from crypto.exchanges.ccxt_public import CCXTPublicAdapter
 
 
 class DataQualityTests(unittest.TestCase):
@@ -24,6 +26,30 @@ class DataQualityTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             normalize_candles([self.candle(0, "100"), self.candle(0, "101")],
                               "1m", now=datetime(2026, 1, 1, 0, 5, tzinfo=timezone.utc))
+
+
+class FakeExchange:
+    def __init__(self):
+        self.rows = [[0, 100, 101, 99, 100, 10],
+                     [60000, 100, 101, 99, 100, 10],
+                     [120000, 100, 101, 99, 100, 10],
+                     [180000, 100, 101, 99, 100, 10]]
+
+    def parse_timeframe(self, timeframe):
+        return 60
+
+    async def fetch_ohlcv(self, symbol, timeframe, since, limit):
+        return [row for row in self.rows if row[0] >= since][:limit]
+
+
+class ExchangePaginationTests(unittest.TestCase):
+    def test_ohlcv_range_paginates_and_excludes_end_timestamp(self):
+        adapter = CCXTPublicAdapter.__new__(CCXTPublicAdapter)
+        adapter.exchange = FakeExchange()
+        candles = asyncio.run(adapter.fetch_ohlcv_range("BTC/USDT", "1m", 0, 180000, limit=2))
+        self.assertEqual(len(candles), 3)
+        self.assertEqual([int(c.timestamp.timestamp() * 1000) for c in candles],
+                         [0, 60000, 120000])
 
 
 class DerivativesTests(unittest.TestCase):
