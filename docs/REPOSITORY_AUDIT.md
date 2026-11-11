@@ -55,6 +55,7 @@ The first crypto increment should be research and paper-trading only. It must no
 - Original repository tree, all 11 skill instructions, and all 11 original Python implementations: inspected through GitHub.
 - Feature branch: created from `main`.
 - GitHub Actions workflow added for Python 3.8 and 3.12.
-- Initial CI runs exposed and fixed a repository-root assertion mismatch and an INR rounding expectation. The original plus crypto suite passed on Python 3.8 and 3.12 at commit `214d830` (337 tests).
-- Additional SQLite-ledger and stock-risk regression tests were added after that green run. Their latest CI runs must be checked before treating the current branch as green.
+- CI exposed and fixed a repository-root assertion mismatch, an INR rounding expectation, and an insufficient 24-hour scanner fixture.
+- Latest GitHub Actions run at commit `7e7a1c0` passed **353 tests on Python 3.8 and 353 tests on Python 3.12**.
+- Regression tests cover zero/negative/NaN/Infinity order sizes, invalid broker fills, OHLCV pagination boundaries, 24-hour volume windows, perpetual funding accounting, India tax-period labels, venue/API permission gates, and SQLite fill idempotency.
 - No live exchange APIs or private account endpoints have been called. No live order path is implemented.
